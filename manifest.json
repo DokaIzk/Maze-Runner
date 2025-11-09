@@ -1,0 +1,37 @@
+{
+    "name": "StackRunner - Blockchain Maze Game",
+    "short_name": "StackRunner",
+    "description": "A fast-paced, blockchain-powered maze challenge built for Stacks",
+    "start_url": "/",
+    "display": "fullscreen",
+    "orientation": "portrait-primary",
+    "theme_color": "#0A0A1A",
+    "background_color": "#0A0A1A",
+    "categories": ["games", "entertainment"],
+    "lang": "en",
+    "scope": "/",
+    "icons": [
+        {
+            "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect width='192' height='192' fill='%230A0A1A'/><circle cx='96' cy='96' r='60' fill='%2300CCFF' opacity='0.2'/><text x='96' y='130' font-size='80' text-anchor='middle' fill='%2300CCFF'>🏃‍♂️</text></svg>",
+            "sizes": "192x192",
+            "type": "image/svg+xml",
+            "purpose": "any maskable"
+        },
+        {
+            "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><rect width='512' height='512' fill='%230A0A1A'/><circle cx='256' cy='256' r='160' fill='%2300CCFF' opacity='0.2'/><text x='256' y='340' font-size='200' text-anchor='middle' fill='%2300CCFF'>🏃‍♂️</text></svg>",
+            "sizes": "512x512",
+            "type": "image/svg+xml",
+            "purpose": "any maskable"
+        }
+    ],
+    "screenshots": [
+        {
+            "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 800 600'><rect width='800' height='600' fill='%230A0A1A'/><text x='400' y='300' font-size='40' text-anchor='middle' fill='%2300CCFF'>StackRunner Game Screenshot</text></svg>",
+            "sizes": "800x600",
+            "type": "image/svg+xml",
+            "form_factor": "wide"
+        }
+    ],
+    "related_applications": [],
+    "prefer_related_applications": false
+}
