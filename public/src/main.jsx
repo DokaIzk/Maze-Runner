@@ -1,3 +1,12 @@
+// Import React and Dynamic SDK for wallet UI
+import React from 'react';
+import ReactDOM from 'react-dom/client';
+import { DynamicContextProvider, DynamicWidget } from '@dynamic-labs/sdk-react-core';
+import { ConnectWallet } from './ui/ConnectWallet.jsx';
+import { dynamicConfig } from './dynamic-config';
+import { EthereumWalletConnectors } from "@dynamic-labs/ethereum";
+
+
 // Main game initialization
 class MazeRunnerGame {
     constructor() {
@@ -182,14 +191,35 @@ document.addEventListener('DOMContentLoaded', () => {
     
     console.log('All dependencies loaded successfully');
 
-    // Initialize the game
-    window.mazeRunner = new MazeRunnerGame();
-    
-    // Add keyboard shortcuts info
-    const instructionsDiv = document.getElementById('instructions');
-    if (instructionsDiv) {
-        instructionsDiv.innerHTML += '<br>Press L for Leaderboard • Press S for Stats • Press P to Pause';
+    // ✅ NEW: Initialize React wallet UI first
+    const walletUIElement = document.getElementById('wallet-ui');
+    if (walletUIElement) {
+        const root = ReactDOM.createRoot(walletUIElement);
+        root.render(
+            <DynamicContextProvider settings={{
+                environmentId: "9a3fa5a6-b4cd-479e-847a-2ad44088003b",
+                walletConnectors: [EthereumWalletConnectors],
+            }}>
+                <ConnectWallet />
+                <DynamicWidget /> 
+            </DynamicContextProvider>
+        );
+        console.log('✅ Wallet UI initialized');
+    } else {
+        console.warn('⚠️ wallet-ui element not found');
     }
+
+    setTimeout(() => {
+        // ✅ Initialize the Phaser game
+        window.mazeRunner = new MazeRunnerGame();
+        
+        // Add keyboard shortcuts info
+        const instructionsDiv = document.getElementById('instructions');
+        if (instructionsDiv) {
+            instructionsDiv.innerHTML += '<br>Press L for Leaderboard • Press S for Stats • Press P to Pause';
+        }
+    }, 100);
+
 });
 
 // Handle page visibility changes for auto-pause

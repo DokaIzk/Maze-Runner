@@ -8,21 +8,104 @@
     <meta name="author" content="MazeRunner Team">
 
     <!-- PWA Configuration -->
-    <link rel="manifest" href="manifest.json">
+    <!-- <link rel="manifest" href="manifest.json">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="MazeRunner">
-    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes"> -->
     
     <!-- Open Graph / Social Media -->
-    <meta property="og:type" content="website">
+    <!-- <meta property="og:type" content="website">
     <meta property="og:title" content="MazeRunner - Blockchain Maze Challenge">
     <meta property="og:description" content="Race against time through neon mazes to collect TKN tokens. Compete on the blockchain leaderboard!">
-    <meta property="og:url" content="https://mazerunner.game">
+    <meta property="og:url" content="https://mazerunner.game"> -->
 
-    <!-- Favicon -->
-    <!-- <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏃‍♂️</text></svg>"> -->
-    
+    <!-- Linera X Dynamic -->
+    <script>
+        (() => {
+            const matchesAuthHost = (url) => {
+                try {
+                    const u = new URL(url, document.baseURI);
+                    return u.hostname === "relay.dynamicauth.com" || /\.dynamicauth\.com$/.test(u.hostname);
+                } catch {
+                    return false;
+                }
+            };
+
+            const markCredentialless = (iframe) => {
+                try {
+                    iframe.credentialless = true;
+                } catch { }
+            };
+
+            // Intercept direct assignments to iframe.src
+            try {
+                const desc = Object.getOwnPropertyDescriptor(HTMLIFrameElement.prototype, "src");
+                if (desc && desc.set) {
+                    const originalSet = desc.set;
+                    Object.defineProperty(HTMLIFrameElement.prototype, "src", {
+                        configurable: true,
+                        enumerable: desc.enumerable,
+                        get: desc.get,
+                        set(value) {
+                            if (matchesAuthHost(value)) markCredentialless(this);
+                            return originalSet.call(this, value);
+                        },
+                    });
+                }
+            } catch { }
+
+            // Intercept setAttribute('src', ...)
+            try {
+                const originalSetAttribute = Element.prototype.setAttribute;
+                Element.prototype.setAttribute = function (name, value) {
+                    if (
+                        this instanceof HTMLIFrameElement &&
+                        name &&
+                        name.toLowerCase() === "src" &&
+                        matchesAuthHost(value)
+                    ) {
+                        markCredentialless(this);
+                    }
+                    return originalSetAttribute.call(this, name, value);
+                };
+            } catch { }
+
+            // Fallback: observe added iframes and src attribute changes
+            try {
+                const checkAndMark = (iframe) => {
+                    const value = iframe.getAttribute("src") || iframe.src;
+                    if (value && matchesAuthHost(value)) markCredentialless(iframe);
+                };
+                const observer = new MutationObserver((mutations) => {
+                    for (const m of mutations) {
+                        if (m.type === "childList") {
+                            for (const node of m.addedNodes) {
+                                if (node instanceof HTMLIFrameElement) {
+                                    checkAndMark(node);
+                                } else if (node && node.querySelectorAll) {
+                                    node.querySelectorAll("iframe").forEach(checkAndMark);
+                                }
+                            }
+                        } else if (
+                            m.type === "attributes" &&
+                            m.target instanceof HTMLIFrameElement &&
+                            m.attributeName === "src"
+                        ) {
+                            checkAndMark(m.target);
+                        }
+                    }
+                });
+                observer.observe(document.documentElement, {
+                    childList: true,
+                    subtree: true,
+                    attributes: true,
+                    attributeFilter: ["src"],
+                });
+            } catch { }
+        })();
+    </script>
+
     <title>MazeRunner</title>
     <style>
         * {
@@ -63,14 +146,13 @@
                 gap: 8px !important;
                 left: 50% !important;
                 transform: translateX(-50%) !important;
+                margin-bottom: 32px;
             }
             
             .ui-element {
                 padding: 8px 14px !important;
                 min-width: 70px !important;
                 font-size: 12px !important;
-                /* background: rgba(139, 92, 246, 0.3) !important;
-                border: 1px solid #8B5CF6 !important; */
             }
 
             .game-over-title {
@@ -99,6 +181,7 @@
                 gap: 6px !important;
                 left: 50% !important;
                 transform: translateX(-50%) !important;
+                margin-bottom: 16px;
             }
             
             .ui-element {
@@ -124,42 +207,6 @@
             }
         }
 
-        /* #loading-screen {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.9);
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
-        }
-
-        .loading-text {
-            font-size: 24px;
-            margin-bottom: 20px;
-            color: #00CCFF;
-            text-shadow: 0 0 10px #00CCFF;
-        }
-
-        .loading-bar {
-            width: 300px;
-            height: 10px;
-            background: #333;
-            border-radius: 5px;
-            overflow: hidden;
-        }
-
-        .loading-progress {
-            height: 100%;
-            background: linear-gradient(90deg, #00CCFF, #FFAA00);
-            width: 0%;
-            transition: width 0.3s ease;
-        } */
-
         #ui-overlay {
             position: absolute;
             top: 20px;
@@ -171,11 +218,12 @@
             justify-content: space-between;
             align-items: center;
             z-index: 100;
-            background: rgba(0, 0, 0, 0.8);
+            /* background: rgba(0, 0, 0, 0.8); */
             /* border: 2px solid rgba(212, 15, 2, 1); */
             border-radius: 8px;
             padding: 12px 20px;
             pointer-events: auto;
+            margin-bottom: 60px;
         }
 
         .ui-element {
@@ -272,6 +320,10 @@
             /* text-shadow: 0 0 30px rgba(16, 185, 129, 0.5); */
             animation: titlePulse 2s ease-in-out infinite;
             margin-bottom: 10px;
+        }
+
+        #wallet-ui {
+            display: none !important;
         }
 
         @keyframes titlePulse {
@@ -421,16 +473,29 @@
     </style>
 </head>
 <body>
+    <div id="wallet-ui"></div>
     <div id="game-container">
         <!-- UI Overlay - Hidden by default, only shown during GameScene -->
         <div id="ui-overlay" style="display: none;">
             <div style="flex: 1;"></div>
             <div style="display: flex; flex-direction: column; gap: 4px; align-items: center;">
                 <h1 style="font-size: 18px; font-weight: 600; color: #FFFFFF; margin: 0;">MazeRunner</h1>
+                <span id="wallet-address" style="font-size: 15px; color: #aaa; margin-top: 2px;"></span>
                 <div style="font-size: 18px; font-weight: 600; color: #FFFFFF;">
                     <span id="timer">01:30</span>
                 </div>
+                <div style="display: flex; flex-direction: row; justify-content: space-between; width: 500px;">
+                    <div style="display: flex; flex-direction: column; align-items: center; margin-top: 14px;">
+                        <img src="assets/images/player-icon.png" alt="YOU" style="width: 30px; margin-bottom: 2px;" />
+                        <span style="font-size: 14px; color: #FFFFFF;">You</span>
+                    </div>
+                    <div style="display: flex; flex-direction: column; align-items: center; margin-top: 14px;">
+                        <img src="assets/images/opponent-icon.png" alt="OPPONENT" style="width: 30px; margin-bottom: 2px;" />
+                        <span style="font-size: 14px; color: #FFFFFF;">Opponent</span>
+                    </div>
+                </div>
             </div>
+
             <div style="flex: 1; display: flex; justify-content: flex-end;">
                 <button id="pause-button" style="background: #FFFFFF; border: none; padding: 8px; display: flex; align-items: center; justify-content: center; border-radius: 50%; width: 40px; height: 40px; cursor: pointer;">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -447,35 +512,21 @@
             <div class="final-score"><span id="final-score">0</span></div>
         </div>
 
-        <!-- Instructions -->
-        <!-- <div id="instructions">
-            <span class="desktop-controls">Use WASD or Arrow Keys to move</span>
-            <span class="mobile-controls">Swipe to move • Tap to pause</span>
-            • Collect the STX token before time runs out!
-        </div> -->
+
     </div>
 
     <!-- Phaser.js -->
     <script src="https://cdn.jsdelivr.net/npm/phaser@3.70.0/dist/phaser.min.js"></script>
     
-    <!-- @stacks/connect from CDN with local fallback -->
-    <!-- <script src="https://unpkg.com/@stacks/connect@7.0.2/dist/connect.umd.js" onerror="loadLocalStacksConnect()"></script> -->
-    <script>
-      // Fallback function to load local copy if CDN fails
-      function loadLocalStacksConnect() {
-        console.log('⚠️ CDN failed, loading local copy...');
-        var script = document.createElement('script');
-        script.src = 'lib/stacks-connect.js';
-        document.head.appendChild(script);
-      }
-    </script>
-    
     <!-- Config and API must load FIRST (no defer) to be available for scenes -->
     <script src="src/config.js"></script>
-    <!-- <script src="src/api/stacksAPI.js"></script> -->
-    <!-- <script src="src/api/contractAPI.js"></script> -->
     <script src="src/ui/ErrorPopup.js"></script>
-    
+
+    <!-- Linera Integration -->
+    <script type="module" src="src/linera/dynamic-signer.ts"></script>
+    <script type="module" src="src/linera/linera-adapter.ts"></script>
+
+
     <!-- Utility scripts (with defer is fine) -->
     <script defer src="src/utils/mazeGenerator.js"></script>
     <script defer src="src/utils/collisions.js"></script>
@@ -490,6 +541,6 @@
     <script defer src="src/scenes/UIScene.js"></script>
     
     <!-- Main entry point (loads last) -->
-    <script defer src="src/main.js"></script>
+    <script type="module" src="src/main.jsx"></script>
 </body>
 </html>

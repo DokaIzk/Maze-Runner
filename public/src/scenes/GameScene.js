@@ -53,14 +53,16 @@ class GameScene extends Phaser.Scene {
             uiOverlay.style.visibility = 'visible';
             uiOverlay.style.opacity = '1';
             uiOverlay.style.pointerEvents = 'none';
+
+            const walletAddressSpan = document.getElementById('wallet-address');
+            let walletAddress = window.dynamicWalletAddress;
+            if (walletAddress) {
+                const shortAddr = walletAddress.slice(0, 6) + '...' + walletAddress.slice(-4);
+                walletAddressSpan.textContent = shortAddr;
+            } else {
+                walletAddressSpan.textContent = '';
+            }
         }
-        
-        // Ensure UI elements are visible
-        const uiElements = document.querySelectorAll('.ui-element');
-        uiElements.forEach(el => {
-            el.style.visibility = 'visible';
-            el.style.opacity = '1';
-        });
         
         // Reset game state values to prevent title screen text from persisting
         this.gameState = {
@@ -100,6 +102,52 @@ class GameScene extends Phaser.Scene {
         
         // Setup pause functionality
         this.setupPause();
+
+        // After creating player and opponent icons, add labels
+        this.events.once('postcreate', () => {
+            // Add 'YOU' label under player
+            if (this.player) {
+                let youLabel = document.getElementById('player-you-label');
+                if (!youLabel) {
+                    youLabel = document.createElement('div');
+                    youLabel.id = 'player-you-label';
+                    youLabel.textContent = 'YOU';
+                    youLabel.style.cssText = `
+                        position: absolute;
+                        left: ${this.player.x - 30}px;
+                        top: ${this.player.y + 40}px;
+                        color: #2986f5;
+                        font-weight: bold;
+                        font-size: 1.1em;
+                        font-family: Arial, sans-serif;
+                        text-shadow: 1px 1px 2px #000;
+                        pointer-events: none;
+                    `;
+                    document.body.appendChild(youLabel);
+                }
+            }
+            // Add 'OPPONENT' label under opponent
+            if (this.opponent) {
+                let oppLabel = document.getElementById('opponent-label');
+                if (!oppLabel) {
+                    oppLabel = document.createElement('div');
+                    oppLabel.id = 'opponent-label';
+                    oppLabel.textContent = 'OPPONENT';
+                    oppLabel.style.cssText = `
+                        position: absolute;
+                        left: ${this.opponent.x - 50}px;
+                        top: ${this.opponent.y + 40}px;
+                        color: #a259f7;
+                        font-weight: bold;
+                        font-size: 1.1em;
+                        font-family: Arial, sans-serif;
+                        text-shadow: 1px 1px 2px #000;
+                        pointer-events: none;
+                    `;
+                    document.body.appendChild(oppLabel);
+                }
+            }
+        });
     }
 
     setupInput() {
@@ -955,30 +1003,66 @@ class GameScene extends Phaser.Scene {
     }
 
     updateUI() {
-        // Update DOM elements
-        const timerElement = document.getElementById('timer');
-        
-        if (timerElement) {
-            // Format time as MM:SS
-            const minutes = Math.floor(this.gameState.timeLeft / 60);
-            const seconds = this.gameState.timeLeft % 60;
-            timerElement.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-            
-            // Change color when time is low
-            if (this.gameState.timeLeft <= 10) {
-                timerElement.style.color = '#ff4444';
-            } else {
-                timerElement.style.color = '#FFFFFF';
+        // Update UI overlay with wallet address and player/opponent labels
+        const mazeRunnerHeading = document.getElementById('maze-runner-heading');
+        if (mazeRunnerHeading) {
+            // Get wallet address from window (set by React context)
+            let walletAddress = '';
+            if (window.dynamicUser && window.dynamicUser.walletAddress) {
+                walletAddress = window.dynamicUser.walletAddress;
+            } else if (window.dynamicPrimaryWallet && window.dynamicPrimaryWallet.address) {
+                walletAddress = window.dynamicPrimaryWallet.address;
+            }
+            // Shorten address for display
+            let shortAddress = '';
+            if (walletAddress && walletAddress.length > 8) {
+                shortAddress = walletAddress.slice(0, 6) + '...' + walletAddress.slice(-4);
+            }
+            // Remove any previous wallet address span
+            let prevSpan = document.getElementById('wallet-address-span');
+            if (prevSpan) prevSpan.remove();
+            if (shortAddress) {
+                const addressSpan = document.createElement('span');
+                addressSpan.id = 'wallet-address-span';
+                addressSpan.textContent = ` | Wallet: ${shortAddress}`;
+                addressSpan.style.fontSize = '0.9em';
+                addressSpan.style.color = '#fff';
+                addressSpan.style.marginLeft = '10px';
+                mazeRunnerHeading.appendChild(addressSpan);
             }
         }
-        
-        // Setup pause button click handler (only once)
-        const pauseButton = document.getElementById('pause-button');
-        if (pauseButton && !pauseButton._handlerAttached) {
-            pauseButton.addEventListener('click', () => {
-                this.togglePause();
-            });
-            pauseButton._handlerAttached = true;
+
+        // Add "YOU" and "OPPONENT" labels under player/opponent icons
+        // Remove previous labels if any
+        let youLabel = document.getElementById('player-you-label');
+        if (youLabel) youLabel.remove();
+        let oppLabel = document.getElementById('player-opponent-label');
+        if (oppLabel) oppLabel.remove();
+
+        // Find player and opponent icons in overlay
+        const playerIcon = document.getElementById('player-icon');
+        const opponentIcon = document.getElementById('opponent-icon');
+        if (playerIcon) {
+            youLabel = document.createElement('div');
+            youLabel.id = 'player-you-label';
+            youLabel.textContent = 'YOU';
+            youLabel.style.textAlign = 'center';
+            youLabel.style.fontWeight = 'bold';
+            youLabel.style.fontSize = '0.95em';
+            youLabel.style.color = '#00e676';
+            youLabel.style.marginTop = '2px';
+            playerIcon.parentNode.insertBefore(youLabel, playerIcon.nextSibling);
+        }
+        if (opponentIcon) {
+            oppLabel = document.createElement('div');
+            oppLabel.id = 'player-opponent-label';
+            oppLabel.textContent = 'OPPONENT';
+            oppLabel.style.textAlign = 'center';
+            oppLabel.style.fontWeight = 'bold';
+            oppLabel.style.fontSize = '0.95em';
+            oppLabel.style.color = '#ff1744';
+            oppLabel.style.marginTop = '2px';
+            opponentIcon.parentNode.insertBefore(oppLabel, opponentIcon.nextSibling);
         }
     }
 

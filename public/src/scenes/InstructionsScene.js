@@ -5,7 +5,7 @@ class InstructionsScene extends Phaser.Scene {
         this.instructionSteps = [
             {
                 title: "Welcome to the maze",
-                text: "Race through neon mazes, collect tokens, and earn rewards before time runs out.",
+                text: "Race against another player through the neon maze. Collect tokens, beat the timer, and claim the rewards first!",
                 subtext: "Ready to play? Let's get you started",
                 buttonText: "Learn the Moves"
             },

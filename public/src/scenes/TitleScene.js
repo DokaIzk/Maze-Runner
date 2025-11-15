@@ -1,3 +1,5 @@
+// import { connect } from "http2";
+
 class TitleScene extends Phaser.Scene {
     constructor() {
         super({ key: 'TitleScene' });
@@ -93,6 +95,7 @@ class TitleScene extends Phaser.Scene {
         
         // Connect Wallet button
         const connectWalletBtn = document.createElement('button');
+        connectWalletBtn.id = 'connect-wallet-btn';
         connectWalletBtn.textContent = 'Connect Wallet';
         connectWalletBtn.style.cssText = `
             background: rgba(212, 15, 2, 1);
@@ -107,10 +110,24 @@ class TitleScene extends Phaser.Scene {
             font-family: Arial, sans-serif;
             width: 100%;
         `;
+
+        // connectWalletBtn.disabled = true;
+        // connectWalletBtn.style.opacity = '0.6';
+
+        // const enableWhenReady = setInterval(() => {
+        //     if (window.openDynamicWalletModal) {
+        //         connectWalletBtn.disabled = false;
+        //         connectWalletBtn.style.opacity = 1;
+        //         clearInterval(enableWhenReady);
+        //     }
+        // }, 50);
         
         connectWalletBtn.addEventListener('click', () => {
-            console.log('Connect Wallet clicked');
-            // TODO: Implement wallet connection
+            if (window.openDynamicWalletModal) {
+                window.openDynamicWalletModal();
+            } else {
+                console.log('Dynamic wallet modal function not found');
+            }
         });
         
         // Continue as Guest button

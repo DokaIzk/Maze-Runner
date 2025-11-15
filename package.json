@@ -1,41 +1,42 @@
 {
   "name": "mazerunner",
   "version": "1.0.0",
+  "type": "module",
   "description": "MazeRunner - A blockchain-powered maze game",
-  "main": "src/main.js",
   "scripts": {
-    "start": "http-server public -p 3000 -c-1",
-    "dev": "live-server public --port=3000 --open",
-    "dev-static": "http-server public -p 3000 -c-1 -o",
-    "build": "echo 'No build process needed for vanilla JS'",
-    "test": "echo 'No tests specified'",
-    "lint": "echo 'No linting configured'"
+    "copy-wasm": "mkdir -p public/wasm && cp -r node_modules/@linera/client/dist/* public/wasm/",
+    "dev": "npm run copy-wasm && vite",
+    "build": "npm run copy-wasm && vite build",
+    "preview": "vite preview",
+    "start": "vite --port 3000"
   },
   "keywords": [
     "blockchain",
     "game",
     "maze",
     "phaser",
-    "javascript"
+    "javascript",
+    "linera",
+    "web3"
   ],
   "author": "MazeRunner Team",
   "license": "MIT",
   "devDependencies": {
-    "@parcel/transformer-webmanifest": "^2.16.0",
-    "http-server": "^14.1.1",
-    "live-server": "^1.2.2",
-    "parcel": "^2.16.0"
+    "@vitejs/plugin-react": "^4.7.0",
+    "typescript": "^5.3.0",
+    "vite": "^5.0.0"
   },
-  "dependencies": {},
+  "dependencies": {
+    "@dynamic-labs/ethereum": "^4.45.0",
+    "@dynamic-labs/ethereum-aa": "^4.45.0",
+    "@dynamic-labs/sdk-api": "^0.0.822",
+    "@dynamic-labs/sdk-react-core": "^4.45.0",
+    "@linera/client": "^0.15.5",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "viem": "^2.39.0"
+  },
   "engines": {
-    "node": ">=14.0.0"
-  },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/your-username/stackrunner.git"
-  },
-  "bugs": {
-    "url": "https://github.com/your-username/stackrunner/issues"
-  },
-  "homepage": "https://github.com/your-username/stackrunner#readme"
+    "node": ">=18.0.0"
+  }
 }
