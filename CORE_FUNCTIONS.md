@@ -94,6 +94,47 @@ Core functions and responsibilities
 - `src/utils/mazeGenerator.js` exports maze generation functions (e.g. `generateMaze(width, height, options)`) — used by the MazeCreation preview and by `GameScene` to produce the playable maze layout.
 - `src/utils/collisions.js` contains collision detection and overlap handling used by `GameScene` physics.
 
+8) Wallet Integration & Dynamic SDK
+
+- **Connect Wallet Button:**
+  - Present in TitleScene overlay, triggers Dynamic modal via `window.openDynamicWalletModal()`.
+  - Button text updates to "Connect Wallet", "Continue", or "Disconnect Wallet" based on connection state.
+  - After wallet connection, a popup is shown and the user is redirected to InstructionsScene.
+
+- **Dynamic SDK Integration:**
+  - React context provider (`DynamicContextProvider`) is mounted in a hidden div (`#wallet-ui`).
+  - `ConnectWallet` React component exposes `window.openDynamicWalletModal` and updates DOM button state.
+  - Uses `useDynamicContext` and `useDynamicModals` to manage wallet state and modal display.
+  - Wallet address is exposed globally as `window.dynamicWalletAddress` for use in non-React code.
+
+- **Wallet Address Display:**
+  - In GameScene, the wallet address is displayed under the MazeRunner heading in the UI overlay.
+  - Address is shortened (e.g., `0xABCD...1234`) for display.
+  - Address is updated on scene start by reading `window.dynamicWalletAddress`.
+
+- **UI Overlay Structure:**
+  - All overlays are appended to `#game-container`.
+  - The main UI overlay (`#ui-overlay`) contains:
+    - MazeRunner title, wallet address, timer
+    - Player and opponent icons with labels ("YOU" and "OPPONENT")
+    - Responsive layout and spacing
+    - Pause button (top right)
+  - Vertical gap between overlay and maze is controlled via CSS for responsiveness.
+
+- **Scene Transitions & DOM Cleanup:**
+  - Overlays are created in `create()` methods and removed/hidden on scene shutdown or navigation.
+  - TitleScene overlay is removed when moving to InstructionsScene or GameScene.
+  - GameScene overlay is shown/hidden as needed.
+
+- **Global Variables & Debug:**
+  - `window.dynamicWalletAddress` holds the current wallet address.
+  - `window.mazeRunner` or `window.phaserGame` exposes the Phaser game instance for debugging.
+  - Debug helpers (`debugVictory`, `debugGameOver`) are available globally.
+
+- **Frontend-to-Contract Hooks:**
+  - `claimReward()` is called from the Game Over overlay when the user clicks the Claim Reward button.
+  - This function is currently a placeholder and should be implemented to call the smart contract once deployed.
+
 DOM overlay patterns and IDs
 
 - Overlays are appended to the DOM element `#game-container` (ensure this element exists in `public/index.html`).

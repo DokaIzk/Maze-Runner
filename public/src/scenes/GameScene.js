@@ -1,9 +1,9 @@
-// Game Scene - Core gameplay logic
-class GameScene extends Phaser.Scene {
+import * as API from "../linera/API";
+
+export default class GameScene extends Phaser.Scene {
     constructor() {
         super({ key: 'GameScene' });
         
-        // Game state
         this.gameState = {
             score: 0,
             level: 1,
@@ -11,42 +11,24 @@ class GameScene extends Phaser.Scene {
             isGameOver: false,
             isPaused: false
         };
-        
-        // Game objects
         this.player = null;
         this.opponent = null;
         this.mainTKN = null;
         this.miniTKN = [];
         this.walls = null;
-        
-        // Maze data
         this.maze = null;
         this.collisionGrid = null;
-        
-        // Input
         this.cursors = null;
         this.wasd = null;
-        
-        // Timer
         this.gameTimer = null;
-        
-        // User maze configuration (received from MazeCreationScene)
         this.userMazeConfig = null;
-        
-        // Level completion tracking for blockchain
         this.levelCompletions = [];
-        
-        // Opponent token tracking (not in gameState)
         this.opponentTKCount = 0;
     }
-
+    
     create(data) {
-        
-        // Setting transparent background for better mobile visibility
         this.cameras.main.setBackgroundColor('#000000');
-        
-        
-        // Show UI overlay for gameplay and reset values
+    
         const uiOverlay = document.getElementById('ui-overlay');
         if (uiOverlay) {
             uiOverlay.style.display = 'flex';
@@ -64,7 +46,7 @@ class GameScene extends Phaser.Scene {
             }
         }
         
-        // Reset game state values to prevent title screen text from persisting
+        // Reset game state values
         this.gameState = {
             score: 0,
             level: 1,
@@ -72,40 +54,25 @@ class GameScene extends Phaser.Scene {
             isGameOver: false,
             isPaused: false
         };
-        
-        // Reset opponent token count when restarting
+    
         this.opponentTKCount = 0;
-        
-        // Store user maze configuration
         if (data && data.userMazeConfig) {
             this.userMazeConfig = data.userMazeConfig;
-            
-            // Adjust starting difficulty based on user selection
             this.adjustGameDifficulty();
         }
         
         // Ensure canvas has keyboard focus
         this.game.canvas.setAttribute('tabindex', '1');
         this.game.canvas.focus();
-        
-        // Initialize input
+
         this.setupInput();
-        
-        // Generate first maze (this will calculate proper responsive maze offset)
         this.generateNewLevel();
-        
-        // Start game timer
         this.startTimer();
-        
-        // Update UI
         this.updateUI();
-        
-        // Setup pause functionality
         this.setupPause();
 
         // After creating player and opponent icons, add labels
         this.events.once('postcreate', () => {
-            // Add 'YOU' label under player
             if (this.player) {
                 let youLabel = document.getElementById('player-you-label');
                 if (!youLabel) {
@@ -151,7 +118,6 @@ class GameScene extends Phaser.Scene {
     }
 
     setupInput() {
-        // Arrow keys
         this.cursors = this.input.keyboard.createCursorKeys();
         
         // WASD keys
@@ -206,13 +172,10 @@ class GameScene extends Phaser.Scene {
                 
                 // Only move if dragged significant distance
                 if (distance > 20 && distance < minSwipeDistance) {
-                    // Normalize the movement direction - use small incremental steps for collision
                     const angle = Math.atan2(deltaY, deltaX);
-                    const speed = CONFIG.PLAYER_SPEED / 120; // Slower incremental movement
+                    const speed = CONFIG.PLAYER_SPEED / 120;
                     const moveX = Math.cos(angle) * speed;
                     const moveY = Math.sin(angle) * speed;
-                    
-                    // Apply incremental movement with full collision detection
                     const mazeRelativeX = this.player.x - this.mazeOffsetX;
                     const mazeRelativeY = this.player.y - this.mazeOffsetY;
                     
@@ -224,7 +187,7 @@ class GameScene extends Phaser.Scene {
                         this.maze.grid
                     );
                     
-                    // Only update if position actually changed (collision allowed it)
+                    // Update if position actually changed (collision allowed it)
                     const worldX = newPosition.x + this.mazeOffsetX;
                     const worldY = newPosition.y + this.mazeOffsetY;
                     
@@ -253,14 +216,12 @@ class GameScene extends Phaser.Scene {
                 return;
             }
             
-            // Only handle swipes on touch devices or when distance is significant
             if (distance < minSwipeDistance) {
                 // Reset variables for short movements
                 startX = startY = startTime = null;
                 return;
             }
             
-            // Determine swipe direction with collision detection
             if (Math.abs(deltaX) > Math.abs(deltaY)) {
                 // Horizontal swipe
                 if (deltaX > 0) {
@@ -294,7 +255,6 @@ class GameScene extends Phaser.Scene {
             case 'right': deltaX = moveDistance; break;
         }
         
-        // Same collision logic as keyboard movement
         const mazeRelativeX = this.player.x - this.mazeOffsetX;
         const mazeRelativeY = this.player.y - this.mazeOffsetY;
         
@@ -303,7 +263,6 @@ class GameScene extends Phaser.Scene {
             deltaX, deltaY,
             this.getScaledPlayerSize(), this.getScaledPlayerSize(),
             this.collisionGrid, this.levelCellSize || CONFIG.CELL_SIZE,
-            this.maze.grid  // Pass the maze grid for wall checking
         );
         
         // Smooth animation to new position
@@ -311,7 +270,7 @@ class GameScene extends Phaser.Scene {
             targets: this.player,
             x: newPosition.x + this.mazeOffsetX,
             y: newPosition.y + this.mazeOffsetY,
-            duration: 150,
+            duration: 750,
             ease: 'Power2'
         });
     }
@@ -893,7 +852,7 @@ class GameScene extends Phaser.Scene {
             targets: this.opponent,
             x: worldX,
             y: worldY,
-            duration: 200,
+            duration: 320,
             ease: 'Linear',
             onComplete: () => {
                 this.opponent._moving = false;
@@ -903,8 +862,6 @@ class GameScene extends Phaser.Scene {
 
     checkCollisions() {
         if (!this.player) return;
-        
-        // Check main STX collision
         if (this.mainTKN && CollisionSystem.checkPointCollision(
             this.player.x, this.player.y,
             this.mainTKN.x, this.mainTKN.y, 25
@@ -912,7 +869,6 @@ class GameScene extends Phaser.Scene {
             this.collectmainTKN('player');
         }
         
-        // Check opponent main STX collision
         if (this.opponent && this.mainTKN && CollisionSystem.checkPointCollision(
             this.opponent.x, this.opponent.y,
             this.mainTKN.x, this.mainTKN.y, 25
@@ -920,7 +876,6 @@ class GameScene extends Phaser.Scene {
             this.collectmainTKN('opponent');
         }
         
-        // Check mini STX collisions
         this.miniTKN.forEach((miniSTX, index) => {
             if (CollisionSystem.checkPointCollision(
                 this.player.x, this.player.y,
@@ -932,10 +887,8 @@ class GameScene extends Phaser.Scene {
     }
 
     collectmainTKN(who = 'player') {
-        // Track level completion for blockchain
         this.trackLevelCompletion();
         
-        // Add score
         const levelBonus = CONFIG.MAIN_STX_POINTS * this.gameState.level;
         const timeBonus = Math.floor(this.gameState.timeLeft * CONFIG.TIME_BONUS_MULTIPLIER);
         if (who === 'player') {
@@ -944,32 +897,22 @@ class GameScene extends Phaser.Scene {
         } else if (who === 'opponent') {
             this.opponentTKCount = (this.opponentTKCount || 0) + 1;
         }
-        
-        // Remove main STX
         this.mainTKN.destroy();
         this.mainTKN = null;
-        
-        // Check if player completed final level (Level 10)
+
         if (this.gameState.level >= 10) {
             this.gameWon();
             return;
         }
-        
-        // Level up
         this.gameState.level++;
-        
-        // Generate new level
         this.time.delayedCall(500, () => {
             this.generateNewLevel();
         });
     }
 
     collectMiniSTX(index) {
-        // Add score and time
         this.gameState.score += CONFIG.MINI_STX_POINTS;
         this.gameState.timeLeft += CONFIG.MINI_STX_TIME_BONUS;
-        
-        // Remove mini STX
         this.miniTKN[index].destroy();
         this.miniTKN.splice(index, 1);
     }
@@ -984,10 +927,8 @@ class GameScene extends Phaser.Scene {
     }
 
     updateTimer() {
-        if (this.gameState.isPaused) return;
-        
+        if (this.gameState.isPaused) return;   
         this.gameState.timeLeft--;
-        
         if (this.gameState.timeLeft <= 0) {
             this.gameOver();
         }
@@ -1006,7 +947,7 @@ class GameScene extends Phaser.Scene {
         // Update UI overlay with wallet address and player/opponent labels
         const mazeRunnerHeading = document.getElementById('maze-runner-heading');
         if (mazeRunnerHeading) {
-            // Get wallet address from window (set by React context)
+            // Wallet address gotten from window (set by React context)
             let walletAddress = '';
             if (window.dynamicUser && window.dynamicUser.walletAddress) {
                 walletAddress = window.dynamicUser.walletAddress;
@@ -1039,7 +980,6 @@ class GameScene extends Phaser.Scene {
         let oppLabel = document.getElementById('player-opponent-label');
         if (oppLabel) oppLabel.remove();
 
-        // Find player and opponent icons in overlay
         const playerIcon = document.getElementById('player-icon');
         const opponentIcon = document.getElementById('opponent-icon');
         if (playerIcon) {
@@ -1072,11 +1012,11 @@ class GameScene extends Phaser.Scene {
         if (this.gameState.isPaused) {
             this.scene.pause();
             this.showPauseOverlay();
-            this.updatePauseButtonIcon(true); // Show play icon
+            this.updatePauseButtonIcon(true); 
         } else {
             this.scene.resume();
             this.hidePauseOverlay();
-            this.updatePauseButtonIcon(false); // Show pause icon
+            this.updatePauseButtonIcon(false); 
         }
     }
 
@@ -1084,14 +1024,12 @@ class GameScene extends Phaser.Scene {
         const pauseButton = document.getElementById('pause-button');
         if (pauseButton) {
             if (isPaused) {
-                // Show play icon
                 pauseButton.innerHTML = `
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <path d="M8 5v14l11-7L8 5z" fill="#000000"/>
                     </svg>
                 `;
             } else {
-                // Show pause icon
                 pauseButton.innerHTML = `
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <rect x="6" y="4" width="4" height="16" rx="1" fill="#000000"/>
@@ -1123,8 +1061,7 @@ class GameScene extends Phaser.Scene {
                 gap: 30px;
                 padding: 20px;
             `;
-            
-            // Game Paused title
+
             const pausedTitle = document.createElement('h1');
             pausedTitle.textContent = 'Game Paused';
             pausedTitle.style.cssText = `
@@ -1135,7 +1072,6 @@ class GameScene extends Phaser.Scene {
                 text-align: center;
             `;
             
-            // Container for time box and buttons
             const contentContainer = document.createElement('div');
             contentContainer.style.cssText = `
                 background: rgba(27, 28, 28, 1);
@@ -1149,7 +1085,6 @@ class GameScene extends Phaser.Scene {
                 width: 90%;
             `;
             
-            // Time Used box
             const timeBox = document.createElement('div');
             timeBox.style.cssText = `
                 text-align: center;
@@ -1179,7 +1114,6 @@ class GameScene extends Phaser.Scene {
             timeBox.appendChild(timeLabel);
             timeBox.appendChild(timeValue);
             
-            // Buttons container
             const buttonsContainer = document.createElement('div');
             buttonsContainer.style.cssText = `
                 display: flex;
@@ -1189,7 +1123,6 @@ class GameScene extends Phaser.Scene {
                 max-width: 320px;
             `;
             
-            // Resume button (filled red)
             const resumeButton = document.createElement('button');
             resumeButton.textContent = 'Resume';
             resumeButton.style.cssText = `
@@ -1210,7 +1143,6 @@ class GameScene extends Phaser.Scene {
                 this.togglePause();
             });
             
-            // Restart button (outlined)
             const restartButton = document.createElement('button');
             restartButton.textContent = 'Restart';
             restartButton.style.cssText = `
@@ -1240,7 +1172,6 @@ class GameScene extends Phaser.Scene {
                 this.restartGame();
             });
             
-            // Home button (outlined)
             const homeButton = document.createElement('button');
             homeButton.textContent = 'Home';
             homeButton.style.cssText = `
@@ -1274,23 +1205,19 @@ class GameScene extends Phaser.Scene {
                 this.scene.start('TitleScene');
             });
             
-            // Assemble buttons
             buttonsContainer.appendChild(resumeButton);
             buttonsContainer.appendChild(restartButton);
             buttonsContainer.appendChild(homeButton);
             
-            // Assemble content container
             contentContainer.appendChild(timeBox);
             contentContainer.appendChild(buttonsContainer);
             
-            // Assemble the overlay
             pauseOverlay.appendChild(pausedTitle);
             pauseOverlay.appendChild(contentContainer);
             
             document.getElementById('game-container').appendChild(pauseOverlay);
         } else {
             pauseOverlay.style.display = 'flex';
-            // Update time display
             const timeDisplay = document.getElementById('pause-time-display');
             if (timeDisplay) {
                 const minutes = Math.floor(this.gameState.timeLeft / 60);
@@ -1308,7 +1235,6 @@ class GameScene extends Phaser.Scene {
     }
 
     setupPause() {
-        // Handle window focus/blur for auto-pause
         window.addEventListener('blur', () => {
             if (!this.gameState.isGameOver) {
                 this.gameState.isPaused = true;
@@ -1323,31 +1249,23 @@ class GameScene extends Phaser.Scene {
 
     gameOver() {
         this.gameState.isGameOver = true;
-        
-        // Stop timer
         if (this.gameTimer) {
             this.gameTimer.destroy();
         }
-        
-        // Hide UI overlay when game ends
+
         const uiOverlay = document.getElementById('ui-overlay');
         if (uiOverlay) {
             uiOverlay.style.display = 'none';
         }
         
-        // Show game over screen with winner info if applicable
         this.showGameOverScreen();
-        
-        // Submit score to blockchain
-        this.submitScore();
+        this.trackLevelCompletion()
     }
 
     showGameOverScreen(winner, playerSTX, opponentTK) {
         const gameOverScreen = document.getElementById('game-over-screen');
         const finalScoreElement = document.getElementById('final-score');
         const submissionStatus = document.getElementById('submission-status');
-        
-        // Hide UI overlay
         const uiOverlay = document.getElementById('ui-overlay');
         if (uiOverlay) {
             uiOverlay.style.display = 'none';
@@ -1361,103 +1279,227 @@ class GameScene extends Phaser.Scene {
         const playerScore = this.gameState.score || 0;
         const playerSTXCount = this.gameState.playerSTXCount || 0;
         const opponentTKCount = this.opponentTKCount || 0;
+
+        let playerIsWinner = playerSTXCount > opponentTKCount;
+        let opponentIsWinner = opponentTKCount > playerSTXCount;
         
         // Update title
         const titleElement = document.querySelector('.game-over-title');
         if (titleElement) {
-            titleElement.textContent = 'Game Over';
-            titleElement.style.cssText = `
-                font-size: 32px;
-                font-weight: bold;
-                color: #FFFFFF;
-                margin: 0 0 30px 0;
-                text-align: center;
-            `;
+            if (playerIsWinner) {
+                titleElement.textContent = 'Game Complete';
+                titleElement.style.cssText = `
+                    font-size: 32px;
+                    font-weight: bold;
+                    color: #FFFFFF;
+                    margin: 0 0 10px 0;
+                    text-align: center;
+                `;
+                // Add small text under the title
+                let subtitle = document.getElementById('game-complete-subtitle');
+                if (!subtitle) {
+                    subtitle = document.createElement('div');
+                    subtitle.id = 'game-complete-subtitle';
+                    subtitle.textContent = 'All levels have been completed!';
+                    subtitle.style.cssText = `
+                        font-size: 18px;
+                        color: #FFFFFF;
+                        margin-bottom: 20px;
+                        text-align: center;
+                        opacity: 0.85;
+                    `;
+                    titleElement.parentNode.insertBefore(subtitle, titleElement.nextSibling);
+                } else {
+                    subtitle.style.display = 'block';
+                }
+            } else {
+                titleElement.textContent = 'Game Over';
+                titleElement.style.cssText = `
+                    font-size: 32px;
+                    font-weight: bold;
+                    color: #FFFFFF;
+                    margin: 0 0 30px 0;
+                    text-align: center;
+                `;
+                // Hide subtitle if it exists
+                let subtitle = document.getElementById('game-complete-subtitle');
+                if (subtitle) {
+                    subtitle.style.display = 'none';
+                }
+            }
         }
-        
+
         // Create score comparison display
         if (finalScoreElement) {
-            finalScoreElement.innerHTML = `
-                <div style="
-                    background: rgba(27, 28, 28, 1);
-                    border-radius: 12px;
-                    padding: 20px;
-                    display: flex;
-                    flex-direction: column;
-                    gap: 30px;
-                    width: 650px;
-                    max-width: 90vw;
-                    text-align: center;
-                ">
-                    <!-- Player vs Opponent Comparison -->
-                    <div style="display: flex; gap: 20px; justify-content: center; width: 100%;">
-                        <!-- Player Side -->
-                        <div style="
-                            flex: 1;
-                            background: transparent;
-                            border: 2px solid rgba(212, 15, 2, 1);
-                            border-radius: 12px;
-                            padding: 20px;
-                            text-align: center;
-                        ">
-                            <div style="font-size: 18px; color: #FFFFFF; margin-bottom: 10px; font-weight: 600;">🐭 Player</div>
-                            <div style="font-size: 36px; color: #FFFFFF; font-weight: bold; letter-spacing: 2px; margin-bottom: 5px;">${playerSTXCount}</div>
-                            <div style="font-size: 14px; color: #FFFFFF; opacity: 0.7;">Tokens</div>
+            if (playerIsWinner) {
+                // Player wins
+                finalScoreElement.innerHTML = `
+                    <div style="
+                        background: rgba(27, 28, 28, 1);
+                        border-radius: 20px;
+                        padding: 25px;
+                        display: flex;
+                        flex-direction: column;
+                        gap: 30px;
+                        width: 650px;
+                        max-width: 90vw;
+                        text-align: center;
+                        box-shadow: 0 4px 32px rgba(0,0,0,0.25);
+                    ">
+                        <div style="display: flex; gap: 20px; justify-content: center; width: 100%;">
+                            <!-- Player Side -->
+                            <div style="
+                                flex: 1;
+                                background: rgba(212, 15, 2, 1);
+                                border-radius: 12px;
+                                padding: 20px;
+                                text-align: center;
+                                color: #fff;
+                                display: flex;
+                                flex-direction: column;
+                                align-items: center;
+                                font-weight: bold;
+                            ">
+                                
+                                <div style="font-size: 18px; margin-bottom: 6px;">
+                                    <img src="assets/images/player-icon.png" alt="YOU" style="width: 22px; margin-bottom: -4px;" /> Player
+                                </div>
+                                <div style="font-size: 32px; margin-bottom: 4px;">${playerSTXCount}</div>
+                                <div style="font-size: 14px; opacity: 0.85;">Tokens Collected</div>
+                            </div>
+                            <!-- Opponent Side -->
+                            <div style="
+                                flex: 1;
+                                background: #18191a;
+                                border-radius: 12px;
+                                padding: 20px;
+                                text-align: center;
+                                color: #fff;
+                                display: flex;
+                                flex-direction: column;
+                                align-items: center;
+                                font-weight: bold;
+                            ">
+                                <div style="font-size: 18px; margin-bottom: 6px;">
+                                    <img src="assets/images/opponent-icon.png" alt="OPPONENT" style="width: 22px; margin-bottom: -4px;" /> Opponent
+                                </div>
+                                <div style="font-size: 32px; margin-bottom: 4px;">${opponentTKCount}</div>
+                                <div style="font-size: 14px; opacity: 0.85;">Tokens Collected</div>
+                            </div>
                         </div>
-                        
-                        <!-- Opponent Side -->
-                        <div style="
-                            flex: 1;
-                            background: transparent;
-                            border: 2px solid rgba(212, 15, 2, 1);
-                            border-radius: 12px;
-                            padding: 20px;
-                            text-align: center;
-                        ">
-                            <div style="font-size: 18px; color: #FFFFFF; margin-bottom: 10px; font-weight: 600;">👹 Opponent</div>
-                            <div style="font-size: 36px; color: #FFFFFF; font-weight: bold; letter-spacing: 2px; margin-bottom: 5px;">${opponentTKCount}</div>
-                            <div style="font-size: 14px; color: #FFFFFF; opacity: 0.7;">Tokens</div>
+                        <div style="font-size: 22px; color: #fff; margin-top: 18px; margin-bottom: 10px; font-weight: bold;">
+                            Final Score: ${playerScore.toLocaleString()}
+                        </div>
+                        <div style="display: flex; gap: 12px; justify-content: center; width: 100%; margin-top: 8px;">
+                            <button id="restart-button" style="
+                                background: rgba(212, 15, 2, 1);
+                                color: #FFFFFF;
+                                border: none;
+                                padding: 14px 0;
+                                font-size: 18px;
+                                font-weight: 600;
+                                border-radius: 18px;
+                                cursor: pointer;
+                                transition: all 0.3s ease;
+                                font-family: Arial, sans-serif;
+                                width: 28%;
+                            ">Play Again</button>
+                            <button id="claim-reward-btn" style="
+                                background: transparent;
+                                color: #FFFFFF;
+                                border: 2px solid rgba(212, 15, 2, 1);
+                                padding: 14px 0;
+                                font-size: 18px;
+                                font-weight: 600;
+                                border-radius: 18px;
+                                cursor: pointer;
+                                transition: all 0.3s ease;
+                                font-family: Arial, sans-serif;
+                                width: 28%;
+                            ">Claim Reward</button>
                         </div>
                     </div>
-                    
-                    <!-- Your Score -->
-                    <div>
-                        <div style="font-size: 16px; color: #FFFFFF; margin-bottom: 10px; opacity: 0.8;">Your Score</div>
-                        <div style="font-size: 48px; color: #FFFFFF; font-weight: bold; letter-spacing: 2px;">${playerScore.toLocaleString()}</div>
+                `;
+            } else {
+                // Opponent wins or draw: use existing styling
+                finalScoreElement.innerHTML = `
+                    <div style="
+                        background: rgba(27, 28, 28, 1);
+                        border-radius: 12px;
+                        padding: 20px;
+                        display: flex;
+                        flex-direction: column;
+                        gap: 30px;
+                        width: 650px;
+                        max-width: 90vw;
+                        text-align: center;
+                    ">
+                        <!-- Player vs Opponent Comparison -->
+                        <div style="display: flex; gap: 20px; justify-content: center; width: 100%;">
+                            <!-- Player Side -->
+                            <div style="
+                                flex: 1;
+                                background: ${playerIsWinner ? 'rgba(212, 15, 2, 1)' : 'transparent'};
+                                border: 2px solid rgba(212, 15, 2, 1);
+                                border-radius: 12px;
+                                padding: 20px;
+                                text-align: center;
+                            ">
+                                <div style="font-size: 18px; color: #FFFFFF; margin-bottom: 10px; font-weight: 600;"><img src="assets/images/player-icon.png" alt="YOU" style="width: 30px; margin-bottom: 2px;" /> Player</div>
+                                <div style="font-size: 36px; color: #FFFFFF; font-weight: bold; letter-spacing: 2px; margin-bottom: 5px;">${playerSTXCount}</div>
+                                <div style="font-size: 14px; color: #FFFFFF; opacity: 0.7;">Tokens</div>
+                            </div>
+                            <!-- Opponent Side -->
+                            <div style="
+                                flex: 1;
+                                background: ${opponentIsWinner ? 'rgba(212, 15, 2, 1)' : 'transparent'};
+                                border: 2px solid rgba(212, 15, 2, 1);
+                                border-radius: 12px;
+                                padding: 20px;
+                                text-align: center;
+                            ">
+                                <div style="font-size: 18px; color: #FFFFFF; margin-bottom: 10px; font-weight: 600;"><img src="assets/images/opponent-icon.png" alt="OPPONENT" style="width: 30px; margin-bottom: 2px;" /> Opponent</div>
+                                <div style="font-size: 36px; color: #FFFFFF; font-weight: bold; letter-spacing: 2px; margin-bottom: 5px;">${opponentTKCount}</div>
+                                <div style="font-size: 14px; color: #FFFFFF; opacity: 0.7;">Tokens</div>
+                            </div>
+                        </div>
+                        <!-- Your Score -->
+                        <div>
+                            <div style="font-size: 16px; color: #FFFFFF; margin-bottom: 10px; opacity: 0.8;">Your Score</div>
+                            <div style="font-size: 48px; color: #FFFFFF; font-weight: bold; letter-spacing: 2px;">${playerScore.toLocaleString()}</div>
+                        </div>
+                        <!-- Buttons -->
+                        <div style="display: flex; flex-direction: column; gap: 16px; width: 100%;">
+                            <button id="restart-button" style="
+                                background: rgba(212, 15, 2, 1);
+                                color: #FFFFFF;
+                                border: none;
+                                padding: 18px 32px;
+                                font-size: 18px;
+                                font-weight: 600;
+                                border-radius: 8px;
+                                cursor: pointer;
+                                transition: all 0.3s ease;
+                                font-family: Arial, sans-serif;
+                                width: 100%;
+                            ">Try again</button>
+                            <button id="home-button" style="
+                                background: transparent;
+                                color: #FFFFFF;
+                                border: 2px solid rgba(212, 15, 2, 1);
+                                padding: 18px 32px;
+                                font-size: 18px;
+                                font-weight: 600;
+                                border-radius: 8px;
+                                cursor: pointer;
+                                transition: all 0.3s ease;
+                                font-family: Arial, sans-serif;
+                                width: 100%;
+                            ">Home</button>
+                        </div>
                     </div>
-                    
-                    <!-- Buttons -->
-                    <div style="display: flex; flex-direction: column; gap: 16px; width: 100%;">
-                        <button id="restart-button" style="
-                            background: rgba(212, 15, 2, 1);
-                            color: #FFFFFF;
-                            border: none;
-                            padding: 18px 32px;
-                            font-size: 18px;
-                            font-weight: 600;
-                            border-radius: 8px;
-                            cursor: pointer;
-                            transition: all 0.3s ease;
-                            font-family: Arial, sans-serif;
-                            width: 100%;
-                        ">Try again</button>
-                        
-                        <button id="home-button" style="
-                            background: transparent;
-                            color: #FFFFFF;
-                            border: 2px solid rgba(212, 15, 2, 1);
-                            padding: 18px 32px;
-                            font-size: 18px;
-                            font-weight: 600;
-                            border-radius: 8px;
-                            cursor: pointer;
-                            transition: all 0.3s ease;
-                            font-family: Arial, sans-serif;
-                            width: 100%;
-                        ">Home</button>
-                    </div>
-                </div>
-            `;
+                `;
+            }
         }
         
         if (gameOverScreen) {
@@ -1498,142 +1540,70 @@ class GameScene extends Phaser.Scene {
                 this.scene.start('TitleScene');
             };
         }
+
+        const claimRewardBtn = document.getElementById('claim-reward-btn');
+        if (claimRewardBtn) {
+            claimRewardBtn.onclick = () => {
+                this.scene.launch('ClaimRewardsScene');
+            };
+        }
     }
-    
+
     addClaimRewardButton() {
         const gameOverScreen = document.getElementById('game-over-screen');
         if (!gameOverScreen) return;
-        
-        // Check if button already exists
         if (document.getElementById('claim-reward-btn')) return;
-        
-        const claimButton = document.createElement('button');
-        claimButton.id = 'claim-reward-btn';
-        claimButton.textContent = '💰 Claim Reward';
-        claimButton.style.cssText = `
-            background: linear-gradient(135deg, #10b981, #059669);
-            color: white;
-            border: none;
-            padding: 12px 30px;
-            font-size: 16px;
-            font-weight: bold;
-            border-radius: 8px;
-            cursor: pointer;
-            margin-top: 15px;
-            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
-            transition: all 0.3s ease;
-        `;
-        
-        claimButton.addEventListener('mouseenter', () => {
-            claimButton.style.transform = 'translateY(-2px)';
-            claimButton.style.boxShadow = '0 6px 20px rgba(16, 185, 129, 0.4)';
-        });
-        
-        claimButton.addEventListener('mouseleave', () => {
-            claimButton.style.transform = 'translateY(0)';
-            claimButton.style.boxShadow = '0 4px 15px rgba(16, 185, 129, 0.3)';
-        });
-        
-        claimButton.addEventListener('click', async () => {
-            await this.claimReward();
-        });
-        
-        // Find restart button and insert before it
-        const restartButton = document.getElementById('restart-button');
-        if (restartButton) {
-            restartButton.parentNode.insertBefore(claimButton, restartButton);
-        } else {
-            gameOverScreen.appendChild(claimButton);
-        }
     }
     
-    async claimReward() {
+    async handleClaimReward() {
         const claimButton = document.getElementById('claim-reward-btn');
         if (!claimButton) return;
         
         try {
             claimButton.disabled = true;
-            claimButton.textContent = '⏳ Processing...';
+            claimButton.textContent = 'Processing...';
             
-            const result = await window.contractAPI.claimReward(
-                this.userMazeConfig.gameId,
-                this.userMazeConfig.winnerPosition
-            );
+            const gameId = this.userMazeConfig.gameId;
+            const result = await API.claimReward(gameId);
             
-            if (result.success) {
-                claimButton.style.background = 'linear-gradient(135deg, #059669, #047857)';
-                claimButton.textContent = '✅ Reward Claimed!';
-                // ErrorPopup.success(`Claimed ${(result.rewardAmount / 1000000).toFixed(2)} STX!\nTX: ${result.txId}`, 5000);
+            if (result && result.claimReward && result.claimReward.claimed) {
+                claimButton.style.background = 'rgba(212, 15, 2, 1)';
+                claimButton.textContent = 'Reward Claimed!';
             } else {
-                throw new Error(result.error || 'Failed to claim reward');
+                throw new Error('Failed to claim reward or already claimed.');
             }
         } catch (error) {
-            console.error('❌ Failed to claim reward:', error);
-            // ErrorPopup.show(error.message, '❌ Claim Failed', 5000);
+            console.error('Failed to claim reward:', error);
             claimButton.disabled = false;
-            claimButton.textContent = '💰 Claim Reward';
-        }
-    }
-
-    async submitScore() {
-        // Check if this is victory screen or game over screen
-        const submissionStatus = document.getElementById('victory-submission-status') || document.getElementById('submission-status');
-        
-        try {
-            await window.contractCalls.submitScoreWithFeedback(
-                this.gameState.score,
-                this.gameState.level,
-                (status) => {
-                    if (submissionStatus) {
-                        submissionStatus.textContent = status;
-                    }
-                }
-            );
-        } catch (error) {
-            console.error('Error submitting score:', error);
-            if (submissionStatus) {
-                submissionStatus.textContent = 'Error submitting score';
-            }
+            claimButton.textContent = 'Claim Reward';
         }
     }
 
     restartGame() {
-        // Hide game over screen
         const gameOverScreen = document.getElementById('game-over-screen');
         if (gameOverScreen) {
             gameOverScreen.style.display = 'none';
         }
-        
-        // Hide victory screen
+
         const victoryOverlay = document.getElementById('victory-overlay');
         if (victoryOverlay) {
             victoryOverlay.style.display = 'none';
-            victoryOverlay.remove(); // Completely remove it from DOM
+            victoryOverlay.remove(); 
         }
         
-        // Hide UI overlay temporarily
         const uiOverlay = document.getElementById('ui-overlay');
         if (uiOverlay) {
             uiOverlay.style.display = 'none';
         }
 
-        // Reset pause button icon
         this.updatePauseButtonIcon(false);
-        
-        // Return to maze creation scene instead of restarting directly
         this.scene.restart({userMazeConfig: this.userMazeConfig});
     }
 
     jumpToLevel(targetLevel) {
         if (targetLevel < 1 || targetLevel > 10) return;
-        
-        // Update game state
         this.gameState.level = targetLevel;
-        
-        // Generate new level
         this.generateNewLevel();
-        
-        // Update UI
         this.updateUI();
     }
 
@@ -1651,19 +1621,16 @@ class GameScene extends Phaser.Scene {
         }
         
         this.gameState.isGameOver = true;
-        
-        // Stop timer
+    
         if (this.gameTimer) {
             this.gameTimer.destroy();
         }
-        
-        // Show victory screen
+    
         this.showVictoryScreen();
-        this.submitScore();
+        this.trackLevelCompletion();
     }
 
     showVictoryScreen() {
-        // Calculate Player vs Villain STX counts
         const playerSTX = this.gameState.playerSTXCount || 0;
         const opponentTK = this.opponentTKCount || 0;
         const playerIsWinner = playerSTX > opponentTK;
@@ -1698,7 +1665,6 @@ class GameScene extends Phaser.Scene {
                 padding: 20px;
             `;
             
-            // Add CSS animation for dramatic entrance
             const style = document.createElement('style');
             style.textContent = `
                 @keyframes victoryFadeIn {
@@ -1819,18 +1785,8 @@ class GameScene extends Phaser.Scene {
         const scaledSize = Math.round(24 * scaleFactor);
         return Math.max(10, Math.min(scaledSize, this.levelCellSize * 0.7));
     }
-
-    // ===== DEBUG METHODS FOR STYLING =====
-    // Call these from browser console to test screens:
-    // game.scene.scenes[0].debugShowVictory('player') - Player wins
-    // game.scene.scenes[0].debugShowVictory('villain') - Villain wins
-    // game.scene.scenes[0].debugShowVictory('draw') - Draw
-    // game.scene.scenes[0].debugShowGameOver('player') - Player wins (game over)
-    // game.scene.scenes[0].debugShowGameOver('villain') - Villain wins (game over)
     
-    debugShowVictory(scenario = 'player') {
-        console.log('🎨 DEBUG: Showing victory screen for:', scenario);
-        
+    debugShowVictory(scenario = 'player') {        
         // Set up mock data based on scenario
         let playerSTXCount, opponentTKCount;
         switch(scenario) {
@@ -1880,7 +1836,6 @@ class GameScene extends Phaser.Scene {
     }
     
     debugShowGameOver(scenario = 'player') {
-        console.log('🎨 DEBUG: Showing game over screen for:', scenario);
         
         // Set up mock data based on scenario
         let playerSTXCount, opponentTKCount;
@@ -1949,7 +1904,6 @@ class GameScene extends Phaser.Scene {
     }
 
     trackLevelCompletion() {
-        // Track completion for blockchain
         const completion = {
             level: this.gameState.level,
             score: this.gameState.score,
@@ -1960,50 +1914,18 @@ class GameScene extends Phaser.Scene {
         };
         
         this.levelCompletions.push(completion);
-        
-        // Submit progress to blockchain (asynchronously, don't block gameplay)
-        this.submitLevelProgressToBlockchain(completion);
+        this.submitLevelProgress(completion);
     }
     
-    async submitLevelProgressToBlockchain(completion) {
+    async submitLevelProgress(completion) {
         try {
-            if (!this.userMazeConfig || !this.userMazeConfig.gameId) {
-                console.warn('⚠️ No game ID available for progress submission');
+            if (!completion || !completion.gameId) {
+                console.warn('No game ID available for progress submission');
                 return;
             }
-            
-            // Calculate completion time (time spent on this round)
-            const roundTime = (completion.timestamp - (this.levelCompletions.length > 1 ? 
-                this.levelCompletions[this.levelCompletions.length - 2].timestamp : 
-                this.userMazeConfig.createdAt)) || 30000;
-            
-            // Call contract API to update progress
-            const result = await window.contractAPI.updatePlayerProgress(
-                this.userMazeConfig.gameId,
-                completion.level,
-                roundTime
-            );
-            
-            if (result.success) {                
-                // Check if this completed the game
-                if (result.isWinner !== undefined) {
-                    // Player completed final round
-                    if (result.isWinner) {
-                        this.userMazeConfig.winnerPosition = result.position;
-                        this.userMazeConfig.winnerReward = result.reward;
-                    } else {
-                        console.log(`📊 Game complete but not in top 5`);
-                    }
-                }
-            } else {
-                console.error(`❌ Failed to submit progress: ${result.error}`);
-                if (result.error) {
-                    // ErrorPopup.warning(`Blockchain note: ${result.error}`, 3000);
-                }
-            }
+            await API.submitScore(completion.score, completion.level, completion.gameId);
         } catch (error) {
-            console.error('❌ Error submitting progress to blockchain:', error);
-            // ErrorPopup.warning('Could not submit progress to blockchain', 3000);
+            console.error('Error submitting progress to blockchain:', error);
         }
     }
 

@@ -5,6 +5,8 @@ import { DynamicContextProvider, DynamicWidget } from '@dynamic-labs/sdk-react-c
 import { ConnectWallet } from './ui/ConnectWallet.jsx';
 import { dynamicConfig } from './dynamic-config';
 import { EthereumWalletConnectors } from "@dynamic-labs/ethereum";
+import GameScene from './scenes/GameScene.js';
+import ClaimRewardsScene from './scenes/ClaimRewardsScene.js';
 
 
 // Main game initialization
@@ -26,7 +28,7 @@ class MazeRunnerGame {
             height: canvasHeight,
             parent: 'game-container',
             backgroundColor: CONFIG.COLORS.BACKGROUND,
-            scene: [BootScene, TitleScene, InstructionsScene, MazeCreationScene, GameScene, UIScene],
+            scene: [BootScene, TitleScene, InstructionsScene, MazeCreationScene, GameScene, ClaimRewardsScene, UIScene],
             physics: {
                 default: 'arcade',
                 arcade: {
@@ -204,7 +206,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 <DynamicWidget /> 
             </DynamicContextProvider>
         );
-        console.log('✅ Wallet UI initialized');
     } else {
         console.warn('⚠️ wallet-ui element not found');
     }

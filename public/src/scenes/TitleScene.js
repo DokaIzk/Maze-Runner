@@ -172,7 +172,6 @@ class TitleScene extends Phaser.Scene {
         
         if (gameContainer) {
             gameContainer.appendChild(overlay);
-            console.log('Overlay appended to game container');
         } else {
             console.error('Could not find game-container element');
         }
