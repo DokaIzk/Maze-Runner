@@ -5,10 +5,12 @@ export default class TitleScene extends Phaser.Scene {
         super({ key: 'TitleScene' });
     }
 
-    preload() {
-        // Load the logo image from assets/images directory
-        this.load.image('maze-logo', 'assets/images/m.png');
-    }
+    // preload() {
+    //     // Load the logo image from assets/images directory
+    //     this.load.image('maze-logo', '../../public/assets/images/m.png');
+    //     // public/assets/images/m.png
+    //     // assets/images/m.png
+    // }
 
     create() {
         // Set solid black background
@@ -48,7 +50,8 @@ export default class TitleScene extends Phaser.Scene {
         
         // Maze logo image
         const logoImg = document.createElement('img');
-        logoImg.src = 'assets/images/m.png';
+        // logoImg.src = 'assets/images/m.png';
+        logoImg.src = './assets/images/m.png';
         logoImg.alt = 'Maze';
         logoImg.style.cssText = `
             width: 280px;
