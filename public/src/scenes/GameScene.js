@@ -1,4 +1,5 @@
 import * as API from "../linera/API";
+import CONFIG from '../config.js';
 
 export default class GameScene extends Phaser.Scene {
     constructor() {

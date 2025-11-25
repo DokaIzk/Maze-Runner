@@ -1,6 +1,6 @@
 // import { connect } from "http2";
 
-class TitleScene extends Phaser.Scene {
+export default class TitleScene extends Phaser.Scene {
     constructor() {
         super({ key: 'TitleScene' });
     }

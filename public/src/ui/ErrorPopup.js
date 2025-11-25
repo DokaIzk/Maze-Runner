@@ -3,7 +3,7 @@
  * Displays themed error messages matching the game's design
  */
 
-class ErrorPopup {
+export default class ErrorPopup {
   /**
    * Show an error popup
    * @param {string} message - Error message to display

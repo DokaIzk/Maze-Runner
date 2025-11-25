@@ -1,5 +1,5 @@
 // UI Scene - Handles user interface overlays and menus
-class UIScene extends Phaser.Scene {
+export default class UIScene extends Phaser.Scene {
     constructor() {
         super({ key: 'UIScene' });
         

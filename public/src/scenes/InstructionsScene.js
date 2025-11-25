@@ -1,4 +1,4 @@
-class InstructionsScene extends Phaser.Scene {
+export default class InstructionsScene extends Phaser.Scene {
     constructor() {
         super({ key: 'InstructionsScene' });
         this.currentStep = 0;

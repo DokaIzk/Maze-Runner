@@ -517,28 +517,10 @@
 
     <!-- Phaser.js -->
     <script src="https://cdn.jsdelivr.net/npm/phaser@3.70.0/dist/phaser.min.js"></script>
-    
-    <!-- Config and API must load FIRST (no defer) to be available for scenes -->
-    <script src="src/config.js"></script>
-    <script src="src/ui/ErrorPopup.js"></script>
 
     <!-- Linera Integration -->
     <script type="module" src="src/linera/dynamic-signer.ts"></script>
     <script type="module" src="src/linera/linera-adapter.ts"></script>
-
-
-    <!-- Utility scripts (with defer is fine) -->
-    <script defer src="src/utils/mazeGenerator.js"></script>
-    <script defer src="src/utils/collisions.js"></script>
-    
-    <!-- Scene scripts (with defer) -->
-    <script defer src="src/scenes/BootScene.js"></script>
-    <script defer src="src/scenes/TitleScene.js"></script>
-    <script defer src="src/scenes/InstructionsScene.js"></script>
-    <!-- <script defer src="src/scenes/ConnectWalletScene.js"></script> -->
-    <script defer src="src/scenes/MazeCreationScene.js"></script>
-    <script defer src="src/scenes/GameScene.js"></script>
-    <script defer src="src/scenes/UIScene.js"></script>
     
     <!-- Main entry point (loads last) -->
     <script type="module" src="src/main.jsx"></script>

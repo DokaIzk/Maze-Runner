@@ -5,7 +5,18 @@ import { DynamicContextProvider, DynamicWidget } from '@dynamic-labs/sdk-react-c
 import { ConnectWallet } from './ui/ConnectWallet.jsx';
 import { dynamicConfig } from './dynamic-config';
 import { EthereumWalletConnectors } from "@dynamic-labs/ethereum";
+
+import CONFIG from './config.js';
+import ErrorPopup from './ui/ErrorPopup.js';
+import MazeGenerator from './utils/mazeGenerator.js';
+import CollisionSystem from './utils/collisions.js';
+
+import BootScene from './scenes/BootScene.js';
+import TitleScene from './scenes/TitleScene.js';
+import InstructionsScene from './scenes/InstructionsScene.js';
+import MazeCreationScene from './scenes/MazeCreationScene.js';
 import GameScene from './scenes/GameScene.js';
+import UIScene from './scenes/UIScene.js';
 import ClaimRewardsScene from './scenes/ClaimRewardsScene.js';
 
 

@@ -1,5 +1,5 @@
 // Maze Creation Scene - User configuration before gameplay
-class MazeCreationScene extends Phaser.Scene {
+export default class MazeCreationScene extends Phaser.Scene {
     constructor() {
         super({ key: 'MazeCreationScene' });
         this.userMazeConfig = null;

@@ -1,5 +1,5 @@
 // Maze generation utility using recursive backtracking algorithm
-class MazeGenerator {
+export default class MazeGenerator {
     constructor(width, height, removeWallsRatio = 0) {
         this.width = width;
         this.height = height;
@@ -222,9 +222,4 @@ class MazeGenerator {
 
         return -1; // No path found
     }
-}
-
-// Export for use in other modules
-if (typeof module !== 'undefined' && module.exports) {
-    module.exports = MazeGenerator;
 }

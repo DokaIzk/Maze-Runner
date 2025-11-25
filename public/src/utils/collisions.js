@@ -1,5 +1,5 @@
 // Collision detection utilities
-class CollisionSystem {
+export default class CollisionSystem {
     static checkWallCollision(x, y, width, height, collisionGrid, cellSize, mazeGrid = null) {
         // x, y are CENTER positions from Phaser
         const halfWidth = width / 2;

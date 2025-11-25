@@ -1,5 +1,7 @@
+import CONFIG from '../config.js';
+
 // Boot Scene - Handles asset loading and initialization
-class BootScene extends Phaser.Scene {
+export default class BootScene extends Phaser.Scene {
     constructor() {
         super({ key: 'BootScene' });
         this.loadingProgress = 0;
