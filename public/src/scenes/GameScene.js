@@ -1,5 +1,6 @@
 import * as API from "../linera/API";
 import CONFIG from '../config.js';
+import MazeGenerator from "../utils/mazeGenerator.js";
 
 export default class GameScene extends Phaser.Scene {
     constructor() {

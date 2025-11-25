@@ -51,7 +51,7 @@ export default class TitleScene extends Phaser.Scene {
         // Maze logo image
         const logoImg = document.createElement('img');
         // logoImg.src = 'assets/images/m.png';
-        logoImg.src = './assets/images/m.png';
+        logoImg.src = '/assets/images/m.png';
         logoImg.alt = 'Maze';
         logoImg.style.cssText = `
             width: 280px;
