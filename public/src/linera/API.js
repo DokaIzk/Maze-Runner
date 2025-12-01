@@ -1,6 +1,22 @@
-const GRAPHQL_URL = "http://localhost:8080/chains/6cc084804f164e31243cab1d7ca8dcdcccdd43d1564254855a083c6bcd42c142/applications/e8159aa0ef800de05d2be85e7942afe009fc33f77dea6c8424764f4fa240a5c5";
+// const GRAPHQL_URL = "http://localhost:8080/chains/6cc084804f164e31243cab1d7ca8dcdcccdd43d1564254855a083c6bcd42c142/applications/e8159aa0ef800de05d2be85e7942afe009fc33f77dea6c8424764f4fa240a5c5";
+let GRAPHQL_URL = "";
+
+async function loadDeploymentInfo() {
+    try {
+        const res = await fetch('/deployment.json');
+        const deployment = await res.json();
+        GRAPHQL_URL = `http://localhost:8080/chains/${deployment.chain_id}/applications/${deployment.application_id}`;
+    } catch (error) {
+        console.error("Failed to load deployment info:", error);
+        throw new Error("Could not load deployment information.");
+    }
+}
 
 async function graphqlRequest(query, variables = {}) {
+    console.log("GRAPHQL_URL:", GRAPHQL_URL);
+    if (!GRAPHQL_URL) {
+        await loadDeploymentInfo();
+    }
     const res = await fetch(GRAPHQL_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
